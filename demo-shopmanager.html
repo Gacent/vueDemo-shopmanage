@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<title>Document</title>
+		<script src="./node_modules/vue/dist/vue.js" type="text/javascript" charset="utf-8"></script>
+		<link rel="stylesheet" type="text/css" href="./node_modules/bootstrap/dist/css/bootstrap.min.css" />
+		<script src="./node_modules/vue-resource/dist/vue-resource.js" type="text/javascript" charset="utf-8"></script>
+	</head>
+
+	<body>
+		<div id="app">
+			<div class="panel panel-primary">
+				<div class="panel-heading">添加品牌</div>
+				<div class="panel-body form-inline">
+					<label>
+					value:<input type="text" v-model="nvalue" class="form-control" @keyup.13="add"/>
+				</label>
+					<input type="button" class="btn btn-primary" value="添加" @click="add" />
+					<label>
+					搜索关键字:<input type="text" v-model="keywords" class="form-control" v-focus />
+				</label>
+				</div>
+			</div>
+
+			<table class="table table-striped table-bordered table-hover">
+				<tr>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Ctime</th>
+					<th>Operation</th>
+				</tr>
+				<tr v-for="(item,key) in searchs(keywords)" :key="item.key">
+					<td>{{key}}</td>
+					<td>{{item.name}}</td>
+					<td>{{item.ctime}}</td>
+					<td>
+						<a href="" @click.prevent="del(item._id)">删除</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<script type="text/javascript">
+			Vue.directive("focus", {
+				bind() {
+
+				},
+				inserted(el) {
+					el.focus();
+				},
+				update() {
+
+				}
+			})
+
+			var vm = new Vue({
+				el: '#app',
+				data: {
+					nid: "",
+					nvalue: "",
+					search: "",
+					keywords: "",
+					list: []
+				},
+				created: function() {
+					this.shopList()
+				},
+				methods: {
+					shopList() {
+						this.$http.jsonp("http://127.0.0.1:3000/shopList", {
+							jsonpCallback: "callback"
+						}).then(function(data) {
+							this.list = data.body;
+						})
+					},
+					add() {
+						this.$http.post("http://127.0.0.1:3000/add", {
+							name: this.nvalue
+						},{emulateJSON:true}).then(function(data) {
+							alert(data.body);
+							this.shopList();
+							this.nvalue = "";
+						})
+					},
+					del(id) {
+						//some方法
+						/*this.list.some((item,i)=>{
+							if(item.id==id){
+								this.list.splice(i,1);
+								return true;
+							}
+						})*/
+						//findIndex方法
+						this.$http.post("http://127.0.0.1:3000/del", {
+							_id:id
+						},{emulateJSON:true}).then(function(data) {
+							alert(data.body);
+							this.shopList();
+						})
+//						var index = this.list.findIndex(item => {
+//							if(item.id == id) {
+//								return true;
+//							}
+//						})
+//						this.list.splice(index, 1);
+					},
+					searchs(keywords) {
+						//forEach方法
+						//var newList=[];
+						//this.list.forEach((item,i)=>{
+						//	if(item.name.indexOf(keywords)!=-1){
+						//		newList.push(item)
+						//	}
+						//})
+						//return newList;
+
+						//filter方法
+						//新数组中的元素是通过检查指定数组中符合条件的所有元素
+						return this.list.filter(item => {
+							return item.name.includes(keywords);
+						})
+					}
+				}
+			})
+		</script>
+	</body>
+
+</html>
